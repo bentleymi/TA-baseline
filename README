@@ -1,0 +1,53 @@
+TA-baseline
+====
+
+Collects a host security baseline from the kernel/filesystem: UEFI SecureBoot state, kernel lockdown mode, SSH root-login and password-auth settings (sshd_config, including sshd.d), password aging policy (/etc/shadow), and auditd service state. Emits JSON events to index=main (sourcetype baseline:status) and baseline.* metrics to index=metrics (sourcetype baseline:metrics) hourly, with dashboards.
+
+Prerequisites
+-------------
+  * none - systemd + standard files only
+  * Splunk Enterprise or Universal Forwarder 9.x - 10.6 (forwarder recommended
+    on monitored hosts).
+  * A metrics-typed index (default name: metrics) on the indexer:
+
+      [metrics]
+      datatype = metric
+
+    Forwarders only need that index to exist on the indexer side.
+  * No network egress, no root requirement beyond the Splunk service account.
+    Fully standalone add-on with no dependencies.
+
+Install
+-------
+Install on each monitored host (Apps > Install app from file, splunk install
+app, or deployment server), restart Splunk, then verify:
+
+  index=main sourcetype="baseline:status" | head
+
+Search quick reference
+----------------------
+  index=main sourcetype="baseline:status" | head
+  | mcatalog values(metric_name) where index=metrics metric_name="baseline.*" by host
+  | mstats avg("baseline.*") where index=metrics span=60s by host
+
+Usage
+-----
+Events: index=main sourcetype=baseline:status  (secure_boot, lockdown, sshd settings, aging, auditd)
+Metrics: baseline.secure_boot, baseline.lockdown, baseline.auditd_active, baseline.weak_ssh
+Dashboards: TA-Baseline > Baseline Overview / Baseline Metrics
+
+Configure
+---------
+Override the interval or destination index in etc/apps/TA-baseline/local/inputs.conf
+(never edit default/).
+
+Troubleshooting
+---------------
+  * SecureBoot reading requires UEFI; BIOS hosts report 'unknown'.
+  * shadow file must be readable by splunkd (default root).
+
+License
+-------
+SOURCE-AVAILABLE (see LICENSE) - free personal, educational and evaluation
+use; commercial or production use requires a paid license from BentleyPC
+LLC (https://www.bentleypc.com).
