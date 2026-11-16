@@ -3,43 +3,47 @@
   <description>Collects a host security baseline from the kernel/filesystem: UEFI SecureBoot state, kernel lockdown mode, SSH root-login and password-auth settings (sshd_config, including</description>
   <row>
     <panel>
-      <title>Hosts Reporting (latest)</title>
-      <table>
-        <search>
-          <query>index=main sourcetype="baseline:status"
-| stats latest(_time) as "Last seen", count as Reports by host
-| table host "Last seen" Reports</query>
-          <done/>
-        </search>
-        <option name="drilldown">none</option>
-      </table>
-    </panel>
-  </row>
-  <row>
-    <panel>
-      <title>Distinct baseline.* Metrics (last hour)</title>
+      <title>Weak SSH configs (fleet sum, latest)</title>
       <single>
         <search>
-          <query>| mcatalog values(metric_name) as m where index=metrics metric_name="baseline.*"
-| eval count=mvcount(m)</query>
+          <query>| mstats avg("baseline.weak_ssh") as value where index=metrics span=5m
+| fields - _time | tail 1</query>
           <done/>
         </search>
-        <option name="underLabel">baseline.* metrics streaming</option>
+      </single>
+    </panel>
+    <panel>
+      <title>auditd active (per host, latest, 1=yes)</title>
+      <single>
+        <search>
+          <query>| mstats avg("baseline.auditd_active") as value where index=metrics span=5m
+| fields - _time | tail 1</query>
+          <done/>
+        </search>
+      </single>
+    </panel>
+    <panel>
+      <title>Lockdown enforced (per host, latest, 1=yes)</title>
+      <single>
+        <search>
+          <query>| mstats avg("baseline.lockdown") as value where index=metrics span=5m
+| fields - _time | tail 1</query>
+          <done/>
+        </search>
       </single>
     </panel>
   </row>
   <row>
     <panel>
-      <title>Issues (newest first)</title>
+      <title>Host security posture (latest per host)</title>
       <table>
         <search>
-          <query>index=main sourcetype="baseline:status" _raw="*alarm*"
-| sort - _time
-| table _time host _raw
-| rename _raw as Event
-| head 200</query>
+          <query>index=main sourcetype="baseline:status"
+| dedup host
+| table host auditd_active lockdown weak_ssh password_auth permit_root_login secure_boot</query>
           <done/>
         </search>
+        <option name="count">50</option>
         <option name="drilldown">none</option>
       </table>
     </panel>
