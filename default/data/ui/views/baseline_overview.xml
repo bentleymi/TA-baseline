@@ -6,28 +6,31 @@
       <title>Weak SSH configs (fleet sum, latest)</title>
       <single>
         <search>
-          <query>| mstats avg("baseline.weak_ssh") as value where index=metrics span=5m
-| fields - _time | tail 1</query>
+          <query>| mstats avg("baseline.weak_ssh") as value where index=metrics span=5m by host
+| stats last(value) as v by host
+| stats sum(v) as value</query>
           <done/>
         </search>
       </single>
     </panel>
     <panel>
-      <title>auditd active (per host, latest, 1=yes)</title>
+      <title>auditd active hosts (fleet sum, latest per host)</title>
       <single>
         <search>
-          <query>| mstats avg("baseline.auditd_active") as value where index=metrics span=5m
-| fields - _time | tail 1</query>
+          <query>| mstats avg("baseline.auditd_active") as value where index=metrics span=5m by host
+| stats last(value) as v by host
+| stats sum(v) as value</query>
           <done/>
         </search>
       </single>
     </panel>
     <panel>
-      <title>Lockdown enforced (per host, latest, 1=yes)</title>
+      <title>Kernel lockdown level (fleet avg, latest per host)</title>
       <single>
         <search>
-          <query>| mstats avg("baseline.lockdown") as value where index=metrics span=5m
-| fields - _time | tail 1</query>
+          <query>| mstats avg("baseline.lockdown") as value where index=metrics span=5m by host
+| stats last(value) as v by host
+| stats avg(v) as value</query>
           <done/>
         </search>
       </single>

@@ -6,7 +6,7 @@
       <title>Posture flags (auditd / lockdown / weak_ssh, per host)</title>
       <chart>
         <search>
-          <query>| mstats avg("baseline.*") as "v*" where index=metrics by metric_name span=5m
+          <query>| mstats avg("baseline.*") as "v*" where index=metrics by host, metric_name span=5m
 | rename v* as "baseline.*"</query>
           <done/>
         </search>

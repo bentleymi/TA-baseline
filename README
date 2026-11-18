@@ -33,7 +33,8 @@ Search quick reference
 Usage
 -----
 Events: index=main sourcetype=baseline:status  (secure_boot, lockdown, sshd settings, aging, auditd)
-Metrics: baseline.secure_boot, baseline.lockdown, baseline.auditd_active, baseline.weak_ssh
+Metrics: baseline.secure_boot, baseline.lockdown, baseline.auditd_active, baseline.weak_ssh,
+         baseline.shadow_min_age, baseline.shadow_max_age
 Dashboards: TA-Baseline > Baseline Overview / Baseline Metrics
 
 Configure
@@ -43,8 +44,12 @@ Override the interval or destination index in etc/apps/TA-baseline/local/inputs.
 
 Troubleshooting
 ---------------
-  * SecureBoot reading requires UEFI; BIOS hosts report 'unknown'.
-  * shadow file must be readable by splunkd (default root).
+  * SecureBoot reads the UEFI SecureBoot efivar (sudo -n cat fallback, explicit
+    null marker when unreadable/BIOS); the efivar must be readable by the
+    splunk user or sudoers must allow NOPASSWD /bin/cat of that path.
+  * sshd_config.d drop-ins must be readable by the splunk user (file ACL plus
+    execute/traverse ACL on the directory).
+  * shadow file must be readable by splunkd (add splunk to group shadow).
 
 License
 -------

@@ -5,8 +5,8 @@ import re
 import subprocess
 import sys
 
-EFI_BOOTLOADER_CONTROL = (
-    "/sys/firmware/efi/efivars/BootLoaderControl-8be4df61-93ca-11d2-aa0d-00e098032b8c"
+EFI_SECURE_BOOT = (
+    "/sys/firmware/efi/efivars/SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c"
 )
 LOCKDOWN_PATH = "/sys/kernel/security/lockdown"
 SSH_BASE_CONFIG = "/etc/ssh/sshd_config"
@@ -26,14 +26,28 @@ def read_file(path):
 
 
 def read_secure_boot():
+    raw = None
     try:
-        with open(EFI_BOOTLOADER_CONTROL, "rb") as fh:
-            raw = fh.read(4)
+        with open(EFI_SECURE_BOOT, "rb") as fh:
+            raw = fh.read()
     except OSError:
-        return "unknown"
-    if len(raw) < 4:
-        return "unknown"
-    return "on" if int.from_bytes(raw, "little") & 0x1 else "off"
+        try:
+            proc = subprocess.run(
+                ["sudo", "-n", "/bin/cat", EFI_SECURE_BOOT],
+                capture_output=True,
+                timeout=10,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            proc = None
+        if proc is not None and proc.returncode == 0 and proc.stdout:
+            raw = proc.stdout
+    if not raw:
+        return None
+    if len(raw) >= 8:
+        value = int.from_bytes(raw[4:8], "little") & 1
+    else:
+        value = int.from_bytes(raw, "little") & 1
+    return "on" if value else "off"
 
 
 LOCKDOWN_MODES = {"none": 0, "integrity": 1, "confidentiality": 2}
