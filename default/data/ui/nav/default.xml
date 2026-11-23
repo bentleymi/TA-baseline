@@ -3,5 +3,6 @@
     <view name="baseline_overview" />
     <view name="baseline_metrics" />
     <search label="TA-baseline Events" search="search index=main sourcetype=baseline:status" />
+    <view name="license" />
   </nav>
 </application>
